@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#050914" />
+  <meta name="description" content="SOLARIS — simulasi 3D tata surya interaktif dengan posisi planet berbasis elemen orbit JPL dan ensiklopedia planet." />
+  <title>SOLARIS — Solar System Observatory</title>
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" />
+  <link rel="stylesheet" href="./styles.css" />
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/"
+      }
+    }
+  </script>
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <a class="brand" href="#top" aria-label="SOLARIS Home">
+        <span class="brand-mark">✦</span>
+        <span><strong>SOLARIS</strong><small>ASTRONOMY / EXPLORATION</small></span>
+      </a>
+      <div class="topbar-right">
+        <div class="live-indicator"><span class="pulse"></span><span>SIMULATION LIVE</span></div>
+        <div class="clock-block"><small>WAKTU SIMULASI · WIB</small><strong id="liveClock">--:--:--</strong></div>
+      </div>
+    </header>
+
+    <main id="top" class="workspace">
+      <section class="visual-column">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">OBSERVATORIUM DIGITAL / 01</p>
+            <h1>Jelajahi tata surya.</h1>
+            <p class="section-subtitle">Delapan planet · orbit dinamis · data astronomi</p>
+          </div>
+          <div class="epoch-badge"><span class="status-dot"></span><span id="modelStatus">MODEL JPL · 1800–2050</span></div>
+        </div>
+
+        <div class="scene-card">
+          <div id="sceneContainer" class="scene-container" aria-label="Simulasi tiga dimensi tata surya">
+            <div class="scene-loading" id="sceneLoading"><div class="loader"></div><span>MENYIAPKAN OBSERVATORIUM</span></div>
+            <div class="scene-hud hud-top-left"><span class="hud-label">HELIOCENTRIC VIEW</span><span id="sceneDate">--</span></div>
+            <div class="scene-hud hud-bottom-left"><span class="legend-dot sun-dot"></span> Matahari <span class="legend-dot orbit-dot"></span> Orbit planet</div>
+            <button id="overviewButton" class="floating-button" type="button" title="Kembali ke tampilan seluruh tata surya">⌂ <span>OVERVIEW</span></button>
+            <div id="sceneError" class="scene-error" hidden>WebGL tidak tersedia di browser ini.</div>
+          </div>
+          <div class="scene-tools">
+            <label class="toggle"><input id="orbitToggle" type="checkbox" checked /><span class="switch"></span><span>Orbit</span></label>
+            <label class="toggle"><input id="labelToggle" type="checkbox" checked /><span class="switch"></span><span>Label</span></label>
+            <span class="tools-hint">Geser untuk memutar · cubit/scroll untuk zoom</span>
+          </div>
+        </div>
+
+        <section class="time-panel" aria-label="Kontrol waktu simulasi">
+          <div class="time-topline">
+            <div><p class="eyebrow">KONTROL WAKTU</p><strong id="simDateLabel">--</strong></div>
+            <div class="time-actions">
+              <button id="liveButton" class="text-button active" type="button">● LIVE NOW</button>
+              <button id="playButton" class="icon-button" type="button" aria-label="Jeda simulasi">Ⅱ</button>
+            </div>
+          </div>
+          <div class="time-controls">
+            <div class="date-control"><label for="dateInput">Pilih tanggal & waktu</label><input id="dateInput" type="datetime-local" min="1800-01-01T00:00" max="2050-12-31T23:59" /></div>
+            <div class="speed-control"><label for="speedSelect">Kecepatan waktu</label><select id="speedSelect">
+              <option value="1">1× · waktu nyata</option>
+              <option value="60">60× · 1 menit/detik</option>
+              <option value="3600">3.600× · 1 jam/detik</option>
+              <option value="86400" selected>86.400× · 1 hari/detik</option>
+              <option value="2592000">30 hari/detik</option>
+              <option value="31536000">1 tahun/detik</option>
+            </select></div>
+          </div>
+          <div class="timeline-note"><span>1800</span><div class="timeline-track"><div class="timeline-fill" id="timelineFill"></div></div><span>2050</span><small>Posisi dihitung untuk tanggal simulasi; rentang model yang direkomendasikan: 1800–2050.</small></div>
+        </section>
+
+        <div class="method-note"><span>ⓘ</span><p>Jarak orbit dan ukuran planet pada visualisasi tidak menggunakan skala fisik yang sama agar objek dapat terlihat. Angka jarak dan ukuran sebenarnya ditampilkan pada panel data. Posisi orbit menggunakan pendekatan Keplerian JPL, bukan telemetri wahana secara langsung.</p></div>
+      </section>
+
+      <aside class="inspector-column">
+        <section class="planet-selector-card">
+          <div class="panel-heading"><div><p class="eyebrow">KATALOG OBJEK</p><h2>Pilih planet</h2></div><span class="count-pill">08 OBJECTS</span></div>
+          <div id="planetList" class="planet-list"></div>
+        </section>
+
+        <section id="planetInspector" class="planet-inspector">
+          <div class="inspector-hero">
+            <div class="planet-identity"><span id="selectedIndex" class="planet-index">01 / 08</span><span id="planetClass" class="planet-class">PLANET TERRESTRIAL</span></div>
+            <div class="planet-title-row"><div><h2 id="planetName">Bumi</h2><p id="planetSubtitle">Dunia tempat kita tinggal</p></div><div id="planetGlyph" class="planet-glyph">●</div></div>
+            <p id="planetDescription" class="planet-description"></p>
+          </div>
+
+          <div class="live-stats">
+            <div><small>JARAK DARI MATAHARI</small><strong id="liveDistance">—</strong></div>
+            <div><small>KECEPATAN ORBIT</small><strong id="liveVelocity">—</strong></div>
+            <div><small>BUJUR EKLIPTIKA</small><strong id="liveLongitude">—</strong></div>
+          </div>
+
+          <div class="quick-facts" id="quickFacts"></div>
+
+          <div class="data-section">
+            <div class="data-section-title"><h3>Parameter fisik</h3><span>SI / METRIK</span></div>
+            <div id="physicalData" class="data-grid"></div>
+          </div>
+
+          <div class="data-section">
+            <div class="data-section-title"><h3>Orbit & rotasi</h3><span>DINAMIKA</span></div>
+            <div id="orbitData" class="data-grid"></div>
+          </div>
+
+          <div class="data-section text-data-section">
+            <div class="data-section-title"><h3>Atmosfer & struktur</h3><span>KOMPOSISI</span></div>
+            <div id="atmosphereData" class="text-data-grid"></div>
+          </div>
+
+          <div class="data-section text-data-section">
+            <div class="data-section-title"><h3>Jejak evolusi</h3><span>SEJARAH GEOLOGI</span></div>
+            <p id="evolutionData" class="long-copy"></p>
+          </div>
+
+          <div class="data-section text-data-section">
+            <div class="data-section-title"><h3>Satelit alami</h3><span id="moonCountLabel">—</span></div>
+            <p id="moonDescription" class="long-copy"></p>
+            <div id="moonTags" class="moon-tags"></div>
+            <p class="moon-footnote">Jumlah merupakan snapshot katalog JPL SSD per 19 Oktober 2026; angka dapat berubah saat objek baru dikonfirmasi.</p>
+          </div>
+
+          <div class="data-section text-data-section">
+            <div class="data-section-title"><h3>Eksplorasi manusia</h3><span>MISI</span></div>
+            <p id="missionData" class="long-copy"></p>
+          </div>
+
+          <div class="source-footer"><span>REFERENSI DATA</span><div id="sourceLinks"></div></div>
+        </section>
+      </aside>
+    </main>
+
+    <footer class="footer"><span>© SOLARIS · EDUCATIONAL SPACE SIMULATOR</span><span>DATA BASIS: NASA / JPL / NSSDCA</span></footer>
+  </div>
+
+  <script type="module" src="./src/main.js"></script>
+</body>
+</html>

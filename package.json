@@ -1,0 +1,10 @@
+{
+  "name": "solaris-solar-system-observatory",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Interactive 3D Solar System simulation using JPL Keplerian elements and NASA/JPL reference data.",
+  "scripts": {
+    "check": "node --check src/main.js && node --check src/ephemeris.js && node --check src/planet-data.js && node --check src/planet-textures.js"
+  }
+}
